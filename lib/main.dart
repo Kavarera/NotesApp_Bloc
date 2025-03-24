@@ -26,12 +26,6 @@ class MainApp extends StatelessWidget {
               (context) =>
                   DependencyInjection<HomeBloc>()..add(HomeEventGetAllData()),
         ),
-        // BlocProvider(
-        //   create:
-        //       (context) =>
-        //           DependencyInjection<DetailBloc>()
-        //             ..add(LoadNoteDetailEvent(noteEntity: null)),
-        // ),
       ],
       child: MaterialApp.router(
         routerConfig: AppRoutes().router,

@@ -12,6 +12,7 @@ import 'package:notesapp_bloc/features/notes_app/domain/usecases/get_all_note_us
 import 'package:notesapp_bloc/features/notes_app/domain/usecases/update_note_usecase.dart';
 import 'package:notesapp_bloc/features/notes_app/presentation/bloc/detail/detail_bloc.dart';
 import 'package:notesapp_bloc/features/notes_app/presentation/bloc/home/home_bloc.dart';
+import 'package:notesapp_bloc/features/notes_app/presentation/bloc/splash/splash_bloc.dart';
 
 import '../features/notes_app/domain/usecases/add_new_note_usecase.dart';
 
@@ -81,4 +82,7 @@ Future<void> init() async {
       updateNoteUseCase: DependencyInjection(),
     ),
   );
+
+  //SPLASHSCREEN
+  DependencyInjection.registerFactory(() => SplashBloc());
 }
