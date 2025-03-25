@@ -5,7 +5,6 @@ import 'package:notesapp_bloc/features/notes_app/domain/usecases/add_new_note_us
 import 'package:notesapp_bloc/features/notes_app/domain/usecases/get_all_category_usecase.dart';
 import 'package:notesapp_bloc/features/notes_app/domain/usecases/update_note_usecase.dart';
 
-import 'dart:developer';
 import '../../../domain/entities/category_entity.dart';
 
 part 'detail_state.dart';
@@ -87,34 +86,21 @@ class DetailBloc extends Bloc<DetailEvent, DetailState> {
   void _onSaveNote(SaveNoteEvent event, Emitter<DetailState> emit) async {
     if (state is NoteDetailLoadedState) {
       final currentState = state as NoteDetailLoadedState;
-      log("""noteT: ${currentState.title}
-            noteC:${currentState.content}
-            noteCat:${currentState.selectedCategory}""", name: "DetailBloc");
+
       final note = NoteEntity(
         id: event.noteId ?? 0,
         title: currentState.title,
         content: currentState.content,
         category: currentState.selectedCategory,
       );
-      if (event.noteId == null) {
-        //MASUK SECTION UPDATE
-        final result = await insertNoteUseCase.call(note);
-        result.fold(
-          (err) => emit(NoteDetailSavedState()),
-          (note) => emit(NoteDetailSavedState()),
-        );
-      } else {
-        final result = await updateNoteUseCase.call(note);
-        result.fold(
-          (err) {
-            log("Error: $err", name: "DetailBloc");
-            emit(NoteDetailSavedState());
-          },
-          (note) {
-            emit(NoteDetailSavedState());
-          },
-        );
-      }
+      final result =
+          event.noteId == null
+              ? await insertNoteUseCase.call(note)
+              : await updateNoteUseCase.call(note);
+      result.fold(
+        (err) => emit(NoteDetailSavedState()),
+        (note) => emit(NoteDetailSavedState()),
+      );
     }
   }
 }

@@ -1,6 +1,7 @@
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:notesapp_bloc/DI/dependency_injection.dart';
@@ -56,11 +57,12 @@ class _DetailNotePageState extends State<DetailNotePage> {
               contentController.text = state.content;
             }
             if (state is NoteDetailSavedState) {
-              context.read<HomeBloc>().add(
-                HomeEventGetAllData(),
-              ); // Refresh data
-              //TODO: REMOVE this
-              context.goNamed('home');
+              context.read<HomeBloc>().add(HomeEventGetAllData());
+              SchedulerBinding.instance.addPostFrameCallback((_) {
+                if (mounted) {
+                  context.goNamed('home');
+                }
+              });
             }
           },
           child: BlocBuilder<DetailBloc, DetailState>(
@@ -69,21 +71,17 @@ class _DetailNotePageState extends State<DetailNotePage> {
                 return const Center(child: CircularProgressIndicator());
               }
 
-              final titleController = TextEditingController(text: state.title);
-              final contentController = CustomTextController(
-                text: state.content,
-              );
-              final FocusNode focusNode = FocusNode();
+              titleController.text = state.title;
+              contentController.text = state.content;
 
               return Scaffold(
                 appBar: AppBar(
                   title: TextField(
                     controller: titleController,
-                    onSubmitted:
-                        (value) => context.read<DetailBloc>().add(
-                          ChangeTitleEvent(value),
-                        ),
                     decoration: InputDecoration(border: InputBorder.none),
+                    onSubmitted: (v) {
+                      context.read<DetailBloc>().add(ChangeTitleEvent(v));
+                    },
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 26,
