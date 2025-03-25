@@ -26,11 +26,7 @@ class NoteModel extends NoteEntity {
   }
 
   Map<String, dynamic> toJson() {
-    return {
-      'title': title,
-      'content': content,
-      if (category != null) 'categoryId': category?.id,
-    };
+    return {'title': title, 'content': content, 'categoryId': category?.id};
   }
 
   NoteEntity toEntity() {

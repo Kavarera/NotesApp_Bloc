@@ -45,13 +45,14 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     on<ToggleEventViewMode>(_onToggleViewMode);
     on<HomeEventSearchNote>(_onSearchNote);
   }
+  List<NoteEntity> _allNotes = [];
 
   void _onSearchNote(HomeEventSearchNote event, Emitter<HomeState> emit) async {
     if (state is HomeStateLoadedAllData) {
       final cs = state as HomeStateLoadedAllData;
       if (event.text.isNotEmpty) {
         final newNotes =
-            cs.notes
+            _allNotes
                 .where(
                   (n) =>
                       n.title.toLowerCase().contains(event.text.toLowerCase()),
@@ -59,10 +60,7 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
                 .toList();
         emit(cs.copyWith(notes: newNotes));
       } else {
-        final res = await getAllNoteUsecase.call();
-        res.fold((err) => emit(HomeStateError(message: err.message)), (notes) {
-          emit(cs.copyWith(notes: notes));
-        });
+        emit(cs.copyWith(notes: _allNotes));
       }
     }
   }
@@ -112,6 +110,7 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
             categories.insert(0, CategoryEntity(name: "All Category", id: -2));
           }
           categories.add(CategoryEntity(name: "Add Category", id: -1));
+          _allNotes = List.from(notes);
           emit(
             HomeStateLoadedAllData(
               notes: notes,

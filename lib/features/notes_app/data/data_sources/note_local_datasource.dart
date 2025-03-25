@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 
@@ -61,6 +63,7 @@ class NoteLocalDataSource {
 
   Future<void> updateNote(NoteModel note) async {
     final db = await database;
+    log("Data sebelum Update: ${note.toJson()}", name: "DATABASE");
     await db!.update(
       'notes',
       note.toJson(),

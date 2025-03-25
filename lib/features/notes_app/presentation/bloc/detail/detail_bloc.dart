@@ -5,6 +5,7 @@ import 'package:notesapp_bloc/features/notes_app/domain/usecases/add_new_note_us
 import 'package:notesapp_bloc/features/notes_app/domain/usecases/get_all_category_usecase.dart';
 import 'package:notesapp_bloc/features/notes_app/domain/usecases/update_note_usecase.dart';
 
+import 'dart:developer';
 import '../../../domain/entities/category_entity.dart';
 
 part 'detail_state.dart';
@@ -22,9 +23,14 @@ class DetailBloc extends Bloc<DetailEvent, DetailState> {
   }) : super(NoteDetailInitialState()) {
     on<LoadNoteDetailEvent>(_onLoadNoteDetail);
     on<ToggleEditModeEvent>(_onToggleEditMode);
-    on<ClearSelectedCategoryEvent>(_onClearSelectedCategory);
     on<ChangeSelectedCategoryEvent>(_onChangeSelectedCategory);
     on<SaveNoteEvent>(_onSaveNote);
+    on<ChangeTitleEvent>(_onChangeTitle);
+  }
+  void _onChangeTitle(ChangeTitleEvent event, Emitter<DetailState> emit) {
+    if (state is NoteDetailLoadedState) {
+      emit((state as NoteDetailLoadedState).copyWith(title: event.title));
+    }
   }
 
   void _onLoadNoteDetail(
@@ -58,21 +64,12 @@ class DetailBloc extends Bloc<DetailEvent, DetailState> {
     }
   }
 
-  void _onClearSelectedCategory(
-    ClearSelectedCategoryEvent event,
-    Emitter<DetailState> emit,
-  ) {
-    if (state is NoteDetailLoadedState) {
-      emit((state as NoteDetailLoadedState).copyWith(selectedCategory: null));
-    }
-  }
-
   void _onChangeSelectedCategory(
     ChangeSelectedCategoryEvent event,
     Emitter<DetailState> emit,
   ) {
     if (state is NoteDetailLoadedState) {
-      if (event.categoryId == 0) {
+      if (event.categoryId == null) {
         emit((state as NoteDetailLoadedState).copyWith(selectedCategory: null));
         return;
       } else {
@@ -90,6 +87,9 @@ class DetailBloc extends Bloc<DetailEvent, DetailState> {
   void _onSaveNote(SaveNoteEvent event, Emitter<DetailState> emit) async {
     if (state is NoteDetailLoadedState) {
       final currentState = state as NoteDetailLoadedState;
+      log("""noteT: ${currentState.title}
+            noteC:${currentState.content}
+            noteCat:${currentState.selectedCategory}""", name: "DetailBloc");
       final note = NoteEntity(
         id: event.noteId ?? 0,
         title: currentState.title,
@@ -106,8 +106,13 @@ class DetailBloc extends Bloc<DetailEvent, DetailState> {
       } else {
         final result = await updateNoteUseCase.call(note);
         result.fold(
-          (err) => emit(NoteDetailSavedState()),
-          (note) => emit(NoteDetailSavedState()),
+          (err) {
+            log("Error: $err", name: "DetailBloc");
+            emit(NoteDetailSavedState());
+          },
+          (note) {
+            emit(NoteDetailSavedState());
+          },
         );
       }
     }

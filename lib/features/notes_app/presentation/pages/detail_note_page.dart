@@ -11,9 +11,34 @@ import 'package:notesapp_bloc/features/notes_app/domain/entities/note_entity.dar
 import '../bloc/detail/detail_bloc.dart';
 import '../bloc/home/home_bloc.dart';
 
-class DetailNotePage extends StatelessWidget {
+class DetailNotePage extends StatefulWidget {
   final NoteEntity? noteEntity;
   const DetailNotePage({super.key, this.noteEntity});
+
+  @override
+  State<DetailNotePage> createState() => _DetailNotePageState();
+}
+
+class _DetailNotePageState extends State<DetailNotePage> {
+  late TextEditingController titleController;
+  late CustomTextController contentController;
+  late FocusNode focusNode;
+
+  @override
+  void initState() {
+    super.initState();
+    titleController = TextEditingController();
+    contentController = CustomTextController();
+    focusNode = FocusNode();
+  }
+
+  @override
+  void dispose() {
+    titleController.dispose();
+    contentController.dispose();
+    focusNode.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -22,13 +47,19 @@ class DetailNotePage extends StatelessWidget {
         create:
             (context) =>
                 DependencyInjection<DetailBloc>()
-                  ..add(LoadNoteDetailEvent(noteEntity: noteEntity)),
+                  ..add(LoadNoteDetailEvent(noteEntity: widget.noteEntity)),
         child: BlocListener<DetailBloc, DetailState>(
           listener: (context, state) {
+            if (state is NoteDetailLoadedState) {
+              // Set nilai awal hanya sekali
+              titleController.text = state.title;
+              contentController.text = state.content;
+            }
             if (state is NoteDetailSavedState) {
               context.read<HomeBloc>().add(
                 HomeEventGetAllData(),
               ); // Refresh data
+              //TODO: REMOVE this
               context.goNamed('home');
             }
           },
@@ -48,6 +79,10 @@ class DetailNotePage extends StatelessWidget {
                 appBar: AppBar(
                   title: TextField(
                     controller: titleController,
+                    onSubmitted:
+                        (value) => context.read<DetailBloc>().add(
+                          ChangeTitleEvent(value),
+                        ),
                     decoration: InputDecoration(border: InputBorder.none),
                     style: TextStyle(
                       color: Colors.white,
@@ -59,7 +94,7 @@ class DetailNotePage extends StatelessWidget {
                     IconButton(
                       onPressed:
                           () => context.read<DetailBloc>().add(
-                            SaveNoteEvent(noteId: noteEntity?.id),
+                            SaveNoteEvent(noteId: widget.noteEntity?.id),
                           ),
                       icon: Icon(Icons.save, color: Colors.white),
                     ),
@@ -77,11 +112,6 @@ class DetailNotePage extends StatelessWidget {
                   ),
                   position: PopupMenuPosition.over,
                   onSelected: (int value) {
-                    //TODO: change selected Category
-                    log("CHANGED CATAGORY-$value", name: "DETAILNOTEPAGE");
-                    state.categories.forEach(
-                      (e) => log("${e.name}-${e.id}", name: "DETAILNOTEPAGE"),
-                    );
                     context.read<DetailBloc>().add(
                       ChangeSelectedCategoryEvent(categoryId: value),
                     );
@@ -118,11 +148,7 @@ class DetailNotePage extends StatelessWidget {
                         InkWell(
                           onTap: () {
                             context.read<DetailBloc>().add(
-                              ClearSelectedCategoryEvent(),
-                            );
-                            log(
-                              "selectedCategory= ${state.selectedCategory}",
-                              name: "DETAILNOTEPAGE",
+                              ChangeSelectedCategoryEvent(categoryId: null),
                             );
                           },
                           child: Icon(Icons.block),
@@ -214,6 +240,13 @@ class DetailNotePage extends StatelessWidget {
                                   : InkWell(
                                     onTap: () {
                                       focusNode.requestFocus();
+                                      if (state.title != titleController.text) {
+                                        context.read<DetailBloc>().add(
+                                          ChangeTitleEvent(
+                                            titleController.text,
+                                          ),
+                                        );
+                                      }
                                       context.read<DetailBloc>().add(
                                         ToggleEditModeEvent(
                                           isEditMode: state.isContentEditMode,

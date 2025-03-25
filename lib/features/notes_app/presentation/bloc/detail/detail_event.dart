@@ -33,17 +33,21 @@ class SaveNoteEvent extends DetailEvent {
   const SaveNoteEvent({required this.noteId});
 }
 
-class ChangeSelectedCategoryEvent extends DetailEvent {
-  final int categoryId;
+class ChangeTitleEvent extends DetailEvent {
+  final String title;
+  const ChangeTitleEvent(this.title);
 
-  const ChangeSelectedCategoryEvent({required this.categoryId});
+  @override
+  List<Object?> get props => [title];
+}
+
+class ChangeSelectedCategoryEvent extends DetailEvent {
+  final int? categoryId;
+
+  const ChangeSelectedCategoryEvent({this.categoryId});
 
   @override
   List<Object?> get props => [categoryId];
-}
-
-class ClearSelectedCategoryEvent extends DetailEvent {
-  const ClearSelectedCategoryEvent();
 }
 
 class ToggleEditModeEvent extends DetailEvent {
